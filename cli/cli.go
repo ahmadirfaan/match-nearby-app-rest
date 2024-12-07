@@ -13,6 +13,9 @@ import (
 
 	"github.com/ahmadirfaan/match-nearby-app-rest/app"
 	"github.com/ahmadirfaan/match-nearby-app-rest/config"
+	databaseconnection "github.com/ahmadirfaan/match-nearby-app-rest/config/database"
+	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
+	"github.com/ahmadirfaan/match-nearby-app-rest/usecase"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,6 +30,17 @@ func NewCli(args []string) *Cli {
 }
 
 func (cli *Cli) Run(app *app.Application) {
+
+	//setup the connection
+	db := databaseconnection.InitDb()
+
+	//create repository
+	userRepository := repositories.NewUserRepository(db)
+
+	usecase.NewUserAuthenticationUsecase(userRepository)
+
+	//create each use case
+
 	ginApp := gin.Default()
 
 	ginApp.GET("/", func(c *gin.Context) {

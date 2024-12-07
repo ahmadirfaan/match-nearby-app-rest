@@ -1,10 +1,10 @@
-package database_connection
+package databaseconnection
 
 import (
 	"fmt"
-	"log"
-	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/ahmadirfaan/match-nearby-app-rest/app"
 	"github.com/ahmadirfaan/match-nearby-app-rest/models/database"
@@ -19,22 +19,24 @@ func InitDb() *gorm.DB {
 	maxIdleConn := app.Config.DBMaxIdleConnections
 	maxConn := app.Config.DBMaxConnections
 	maxLifetimeConn := app.Config.DBMaxLifetimeConnections
-	db_user := app.Config.DBUsername
-	db_pass := app.Config.DBPassword
-	db_host := app.Config.DBHost
-	db_port := app.Config.DBPort
-	db_database := app.Config.DBName
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", db_user, db_pass, db_host, db_port, db_database)
+	databaseUsername := app.Config.DBUsername
+	dbPassword := app.Config.DBPassword
+	databaseHost := app.Config.DBHost
+	databasePort := app.Config.DBPort
+	databaseName := app.Config.DBName
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", databaseHost, databaseUsername, dbPassword, databaseName, databasePort)
+	log.Info("dsn format : " + dsn)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger:                 logger.Default,
 		SkipDefaultTransaction: true,
 		NamingStrategy: &schema.NamingStrategy{
+			TablePrefix:   "",
 			SingularTable: false,
-			NameReplacer:  strings.NewReplacer("ID", "id"),
 			NoLowerCase:   false,
 		},
 	})
 	if err != nil {
+		log.Info("error open postgres : " + dsn)
 		panic(err)
 	}
 	sqlDB, err := db.DB()
@@ -52,7 +54,7 @@ func InitDb() *gorm.DB {
 }
 
 func InitCreateTable(db *gorm.DB) {
-
+	InitEnums(db)
 	db.Debug().AutoMigrate(
 		&database.Users{},
 		&database.Swipes{},
@@ -60,4 +62,16 @@ func InitCreateTable(db *gorm.DB) {
 		&database.Subscriptions{},
 	)
 
+}
+
+func InitEnums(db *gorm.DB) {
+	log.Info("run Init Enums")
+	db.Exec(`
+	DO $$
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gender_enum') THEN
+			CREATE TYPE gender_enum AS ENUM ('MALE', 'FEMALE');
+		END IF;
+	END$$;
+`)
 }

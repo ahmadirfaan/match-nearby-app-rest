@@ -3,8 +3,10 @@ Write-Output "Installing libraries..."
 go get -u github.com/gin-gonic/gin
 
 # Database ORM
+go get -u github.com/oklog/ulid/v2
 go get -u gorm.io/gorm
 go get -u gorm.io/driver/postgres
+
 
 # Authentication (JWT)
 go get -u github.com/golang-jwt/jwt/v5

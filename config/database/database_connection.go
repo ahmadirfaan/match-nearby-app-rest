@@ -3,13 +3,15 @@ package database_connection
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/ahmadirfaan/match-nearby-app-rest/app"
 	"github.com/ahmadirfaan/match-nearby-app-rest/models/database"
-	"gorm.io/gorm"
 	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
 
 func InitDb() *gorm.DB {
@@ -26,6 +28,11 @@ func InitDb() *gorm.DB {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger:                 logger.Default,
 		SkipDefaultTransaction: true,
+		NamingStrategy: &schema.NamingStrategy{
+			SingularTable: false,
+			NameReplacer:  strings.NewReplacer("ID", "id"),
+			NoLowerCase:   false,
+		},
 	})
 	if err != nil {
 		panic(err)

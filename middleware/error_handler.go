@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/ahmadirfaan/match-nearby-app-rest/models/web"
+	"github.com/ahmadirfaan/match-nearby-app-rest/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,12 +22,14 @@ func ErrorHandler() gin.HandlerFunc {
 
 			var resp web.ErrorResponse
 			switch {
-			case errors.Is(err.Err, ErrorAuth):
+			case errors.Is(err.Err, utils.ErrorAuth):
 				resp = web.AuthError()
-			case errors.Is(err.Err, ErrorNotFound):
+			case errors.Is(err.Err, utils.ErrorNotFound):
 				resp = web.NotFoundError()
-			case errors.Is(err.Err, ErrorForbidden):
+			case errors.Is(err.Err, utils.ErrorForbidden):
 				resp = web.ForbiddenError()
+			case errors.Is(err.Err, utils.ErrorBadRequest) || errors.Is(err.Err, utils.ErrorValidator):
+				resp = web.BadRequestError()
 			default:
 				resp = web.InternalServiceError()
 			}
@@ -39,5 +42,5 @@ func ErrorHandler() gin.HandlerFunc {
 
 func NoRouteHandler(c *gin.Context) {
 	// Raise the ErrNotFound error
-	c.Error(ErrorNotFound)
+	c.Error(utils.ErrorNotFound)
 }

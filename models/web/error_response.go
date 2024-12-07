@@ -23,6 +23,10 @@ func InternalServiceError() ErrorResponse {
 	return newErrorResponse(http.StatusInternalServerError, "Internal Server Error")
 }
 
+func BadRequestError() ErrorResponse {
+	return newErrorResponse(http.StatusBadRequest, "Bad Request")
+}
+
 func newErrorResponse(code int, message string) ErrorResponse {
 	return ErrorResponse{
 		Code:    code,

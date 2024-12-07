@@ -1,5 +1,6 @@
 Write-Output "Installing libraries..."
 # Web framework
+go get -u github.com/go-playground/validator
 go get -u github.com/gin-gonic/gin
 
 # Database ORM

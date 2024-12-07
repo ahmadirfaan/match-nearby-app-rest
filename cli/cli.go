@@ -42,6 +42,10 @@ func (cli *Cli) Run(app *app.Application) {
 	usecase.NewUserAuthenticationUsecase(userRepository)
 
 	//create each use case
+	userAuthenticationUsecase := usecase.NewUserAuthenticationUsecase(userRepository)
+
+	//create routes
+	authRoutes := routes.NewAuthRoutes(userAuthenticationUsecase)
 
 	ginApp := gin.Default()
 	configMiddleware(ginApp)
@@ -51,8 +55,8 @@ func (cli *Cli) Run(app *app.Application) {
 	//create group auth
 	authGroup := ginApp.Group(prefixApiURL + "/auth")
 	{
-		authGroup.POST("/signup", routes.SignUp)
-		authGroup.POST("/login", routes.SignIn)
+		authGroup.POST("/signup", authRoutes.SignUp)
+		authGroup.POST("/login", authRoutes.SignIn)
 	}
 
 	StartServerWithGracefulShutdown(ginApp, app.Config)

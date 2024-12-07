@@ -14,6 +14,7 @@ import (
 	"github.com/ahmadirfaan/match-nearby-app-rest/app"
 	"github.com/ahmadirfaan/match-nearby-app-rest/config"
 	databaseconnection "github.com/ahmadirfaan/match-nearby-app-rest/config/database"
+	"github.com/ahmadirfaan/match-nearby-app-rest/middleware"
 	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
 	"github.com/ahmadirfaan/match-nearby-app-rest/routes"
 	"github.com/ahmadirfaan/match-nearby-app-rest/usecase"
@@ -43,6 +44,7 @@ func (cli *Cli) Run(app *app.Application) {
 	//create each use case
 
 	ginApp := gin.Default()
+	configMiddleware(ginApp)
 
 	prefixApiURL := "/api/v1"
 
@@ -54,6 +56,12 @@ func (cli *Cli) Run(app *app.Application) {
 	}
 
 	StartServerWithGracefulShutdown(ginApp, app.Config)
+}
+
+func configMiddleware(ginApp *gin.Engine) {
+	ginApp.Use(middleware.ErrorHandler())
+	ginApp.NoRoute(middleware.NoRouteHandler)
+	ginApp.NoMethod(middleware.NoRouteHandler)
 }
 
 func StartServerWithGracefulShutdown(ginEngine *gin.Engine, serverconfig *config.Config) {

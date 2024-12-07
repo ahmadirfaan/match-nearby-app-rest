@@ -15,6 +15,7 @@ import (
 	"github.com/ahmadirfaan/match-nearby-app-rest/config"
 	databaseconnection "github.com/ahmadirfaan/match-nearby-app-rest/config/database"
 	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
+	"github.com/ahmadirfaan/match-nearby-app-rest/routes"
 	"github.com/ahmadirfaan/match-nearby-app-rest/usecase"
 	"github.com/gin-gonic/gin"
 )
@@ -43,11 +44,15 @@ func (cli *Cli) Run(app *app.Application) {
 
 	ginApp := gin.Default()
 
-	ginApp.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello, world!",
-		})
-	})
+	prefixApiURL := "/api/v1"
+
+	//create group auth
+	authGroup := ginApp.Group(prefixApiURL + "/auth")
+	{
+		authGroup.POST("/signup", routes.SignUp)
+		authGroup.POST("/login", routes.SignIn)
+	}
+
 	StartServerWithGracefulShutdown(ginApp, app.Config)
 }
 

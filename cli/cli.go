@@ -3,11 +3,13 @@ package cli
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/ahmadirfaan/match-nearby-app-rest/app"
 	"github.com/ahmadirfaan/match-nearby-app-rest/config"
@@ -49,11 +51,11 @@ func StartServerWithGracefulShutdown(ginEngine *gin.Engine, serverconfig *config
 		}
 	}()
 
-	log.Println(fmt.Sprintf("Server running on port :%s", serverconfig.AppPort))
+	log.Printf("Server running on port :%s", serverconfig.AppPort)
 
 	// Create a channel to listen for OS signals
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, os.Kill) // Listen for SIGINT, SIGTERM
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM) // Listen for SIGINT, SIGTERM
 	<-quit
 
 	log.Println("Shutting down server...")

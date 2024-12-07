@@ -1,0 +1,27 @@
+# setup the database and redis
+
+version: "3"
+services:
+  redis:
+    container_name: redis
+    image: redis
+    restart: always
+    ports:
+        - "6379:6379"
+    volumes:
+        - "redis:/data"
+  postgres:
+    image: postgres:15 # Use the desired version of PostgreSQL
+    container_name: postgres_container
+    restart: always
+    environment:
+      POSTGRES_USER: admin    # Set your PostgreSQL username
+      POSTGRES_PASSWORD: P@ssw0rdd # Set your PostgreSQL password
+      POSTGRES_DB: nearby  # Set the database name
+    ports:
+      - "5432:5432" # Maps container port to host port
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persistent data storage
+volumes:
+    redis:
+    postgres_data:

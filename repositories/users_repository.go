@@ -9,6 +9,8 @@ import (
 
 type UsersRepository interface {
 	SaveUser(user *database.Users) error
+	GetByUsername(username string) *database.Users
+	GetByEmail(email string) *database.Users
 }
 
 type usersRepository struct {
@@ -31,4 +33,20 @@ func (usersRepository *usersRepository) SaveUser(user *database.Users) error {
 	}
 
 	return nil
+}
+
+func (usersRepository *usersRepository) GetByUsername(username string) *database.Users {
+	var user *database.Users
+	if err := usersRepository.DB.Where("username = ?", username).First(&user).Error; err != nil {
+		return nil
+	}
+	return user
+
+}
+func (usersRepository *usersRepository) GetByEmail(email string) *database.Users {
+	var user *database.Users
+	if err := usersRepository.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil
+	}
+	return user
 }

@@ -17,6 +17,7 @@ type Config struct {
 	LogLevel                 string
 	Environment              string
 	JWTSecret                string
+	TokenTTL                 int
 	RedisAddress             string
 	DBUsername               string
 	DBPassword               string
@@ -27,6 +28,7 @@ type Config struct {
 	DBMaxIdleConnections     int
 	DBMaxLifetimeConnections int
 }
+
 
 func Init() *Config {
 	// Load .env variables (optional)
@@ -61,6 +63,12 @@ func Init() *Config {
 		timeout = 5
 	}
 
+	tokenTTL, err := strconv.Atoi(os.Getenv("TOKEN_TTL"))
+	if err != nil {
+		log.Warnf("Invalid TOKEN_TTL: %v", err)
+		tokenTTL = 604800
+	}
+
 	return &Config{
 		AppPort:                  os.Getenv("APP_PORT"),
 		AppName:                  os.Getenv("APP_NAME"),
@@ -68,6 +76,7 @@ func Init() *Config {
 		LogLevel:                 os.Getenv("LOG_LEVEL"),
 		Environment:              os.Getenv("ENV_MODE"),
 		JWTSecret:                os.Getenv("JWT_SECRET"),
+		TokenTTL:                 tokenTTL,
 		RedisAddress:             os.Getenv("REDIS_ADDRESS"),
 		DBUsername:               os.Getenv("DB_USERNAME"),
 		DBPassword:               os.Getenv("DB_PASSWORD"),

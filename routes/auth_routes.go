@@ -35,13 +35,22 @@ func (ar authRoutes) SignUp(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message":  "Success Register",
-		"password": utils.HashPassword(request.Password),
+		"message": "Success Register",
 	})
 }
 
 func (ar authRoutes) SignIn(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "Hello, Sign In!",
-	})
+	var request web.SignInRequest
+	if err := c.ShouldBindBodyWithJSON(&request); err != nil {
+		c.Error(utils.ErrorBadRequest)
+		return
+	}
+
+	response, err := ar.AuthUseCase.SignIn(request)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(200, &response)
 }

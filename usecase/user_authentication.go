@@ -15,6 +15,7 @@ type userAuthentication struct {
 
 type UserAuthenticationUseCase interface {
 	Register(request web.SignUpRequest) error
+	SignIn(request web.SignInRequest) (*web.SignInResponse, error)
 }
 
 func NewUserAuthenticationUsecase(ur repositories.UsersRepository, pr repositories.ProfilesRepository) UserAuthenticationUseCase {
@@ -52,4 +53,42 @@ func (userAuth *userAuthentication) Register(request web.SignUpRequest) error {
 	}
 
 	return nil
+}
+
+func (userAuth *userAuthentication) SignIn(request web.SignInRequest) (*web.SignInResponse, error) {
+	err := utils.NewValidator().Struct(&request)
+	isEmailEmpty := request.Email == ""
+	isUsernameEmpty := request.Username == ""
+	isEmailAndUsernameEmpty := isEmailEmpty && isUsernameEmpty
+
+	if err != nil || isEmailAndUsernameEmpty {
+		return nil, utils.ErrorValidator
+	}
+
+	var user *database.Users
+	if isEmailEmpty {
+		user = userAuth.userRepository.GetByUsername(request.Username)
+	} else {
+		user = userAuth.userRepository.GetByEmail(request.Email)
+	}
+
+	if user == nil {
+		return nil, utils.ErrorNotFound
+	}
+	isPasswordEquals := utils.CheckPasswordHash(request.Password, user.Password)
+
+	if !isPasswordEquals {
+		return nil, utils.ErrorAuth
+	}
+
+	token, expire, err := utils.GenerateToken(*user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &web.SignInResponse{
+		TokenType:   "Bearer",
+		AccessToken: *token,
+		ExpiredAt:   *expire,
+	}, nil
 }

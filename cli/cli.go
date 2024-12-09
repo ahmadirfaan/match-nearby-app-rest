@@ -44,7 +44,7 @@ func (cli *Cli) Run(app *app.Application) {
 
 	//create each use case
 	userAuthenticationUsecase := usecase.NewUserAuthenticationUsecase(userRepository, profileRepository)
-	userManageUsecase := usecase.NewUserManageUsecase(userRepository)
+	userManageUsecase := usecase.NewUserManageUsecase(userRepository, profileRepository)
 
 	//create routes
 	authRoutes := routes.NewAuthRoutes(userAuthenticationUsecase)

@@ -25,7 +25,11 @@ func NewUserRepository(db *gorm.DB) UsersRepository {
 }
 
 func (usersRepository *usersRepository) SaveUser(user *database.Users) error {
-	user.ID = ulid.Make().String()
+
+	if user.ID == "" {
+		user.ID = ulid.Make().String()
+	}
+
 	if err := usersRepository.DB.Save(&user).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err.Error(),

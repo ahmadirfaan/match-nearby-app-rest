@@ -22,7 +22,12 @@ func NewProfileRepository(db *gorm.DB) ProfilesRepository {
 }
 
 func (profilesRepository *profilesRepository) SaveProfile(profile *database.Profiles) error {
-	profile.ID = ulid.Make().String()
+
+	//generate ID
+	if profile.ID == "" {
+		profile.ID = ulid.Make().String()
+	}
+
 	if err := profilesRepository.DB.Save(&profile).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err.Error(),

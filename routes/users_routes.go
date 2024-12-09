@@ -28,7 +28,7 @@ func (ar userRoutes) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	if err := ar.UserUsecase.UpdateProfile(request); err != nil {
+	if err := ar.UserUsecase.UpdateProfile(c.GetString("userID"), request); err != nil {
 		c.Error(err)
 		return
 	}

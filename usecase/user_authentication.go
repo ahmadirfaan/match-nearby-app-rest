@@ -25,8 +25,7 @@ func NewUserAuthenticationUsecase(ur repositories.UsersRepository, pr repositori
 }
 
 func (userAuth *userAuthentication) Register(request web.SignUpRequest) error {
-	err := utils.NewValidator().Struct(&request)
-	if err != nil {
+	if err := utils.NewValidator().Struct(&request); err != nil {
 		return utils.ErrorValidator
 	}
 

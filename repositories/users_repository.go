@@ -11,6 +11,7 @@ type UsersRepository interface {
 	SaveUser(user *database.Users) error
 	GetByUsername(username string) *database.Users
 	GetByEmail(email string) *database.Users
+	GetByUserId(id string) *database.Users
 }
 
 type usersRepository struct {
@@ -25,7 +26,7 @@ func NewUserRepository(db *gorm.DB) UsersRepository {
 
 func (usersRepository *usersRepository) SaveUser(user *database.Users) error {
 	user.ID = ulid.Make().String()
-	if err := usersRepository.DB.Create(&user).Error; err != nil {
+	if err := usersRepository.DB.Save(&user).Error; err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err.Error(),
 		}).Error("Failed to save user")
@@ -43,9 +44,18 @@ func (usersRepository *usersRepository) GetByUsername(username string) *database
 	return user
 
 }
+
 func (usersRepository *usersRepository) GetByEmail(email string) *database.Users {
 	var user *database.Users
 	if err := usersRepository.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil
+	}
+	return user
+}
+
+func (usersRepository *usersRepository) GetByUserId(id string) *database.Users {
+	var user *database.Users
+	if err := usersRepository.DB.Preload("Profile").Where("id = ?", id).First(&user).Error; err != nil {
 		return nil
 	}
 	return user

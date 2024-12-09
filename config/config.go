@@ -2,6 +2,7 @@ package config
 
 import (
 	"strconv"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
@@ -29,8 +30,15 @@ type Config struct {
 	DBMaxLifetimeConnections int
 }
 
+var cachedConfig *Config
+var configOnce sync.Once
 
 func Init() *Config {
+
+	if cachedConfig != nil {
+		return cachedConfig
+	}
+
 	// Load .env variables (optional)
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -69,7 +77,7 @@ func Init() *Config {
 		tokenTTL = 604800
 	}
 
-	return &Config{
+	config := &Config{
 		AppPort:                  os.Getenv("APP_PORT"),
 		AppName:                  os.Getenv("APP_NAME"),
 		AppTimeout:               timeout,
@@ -87,4 +95,12 @@ func Init() *Config {
 		DBMaxIdleConnections:     dbMaxIdleConnections,
 		DBMaxLifetimeConnections: dbMaxLifetimeConnections,
 	}
+
+	configOnce.Do(func() {
+		// Only load the config once
+		cachedConfig = config
+	})
+
+	return config
+
 }

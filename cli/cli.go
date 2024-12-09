@@ -44,20 +44,40 @@ func (cli *Cli) Run(app *app.Application) {
 
 	//create each use case
 	userAuthenticationUsecase := usecase.NewUserAuthenticationUsecase(userRepository, profileRepository)
+	userManageUsecase := usecase.NewUserManageUsecase(userRepository)
 
 	//create routes
 	authRoutes := routes.NewAuthRoutes(userAuthenticationUsecase)
+	userRoutes := routes.NewUserRoutes(userManageUsecase)
 
 	ginApp := gin.Default()
 	configMiddleware(ginApp)
 
 	prefixApiURL := "/api/v1"
+	authMiddleware := middleware.AuthMiddlewareJWT()
 
 	//create group auth
 	authGroup := ginApp.Group(prefixApiURL + "/auth")
 	{
 		authGroup.POST("/signup", authRoutes.SignUp)
 		authGroup.POST("/login", authRoutes.SignIn)
+	}
+
+	userGroup := ginApp.Group(prefixApiURL + "/users")
+	{
+		userGroup.PUT("", authMiddleware, userRoutes.UpdateProfile)
+	}
+
+	swipeGroup := ginApp.Group(prefixApiURL + "/swipes")
+	swipeGroup.Use(authMiddleware)
+	{
+		swipeGroup.POST("", authMiddleware, userRoutes.UpdateProfile)
+	}
+
+	subscriptionsGroup := ginApp.Group(prefixApiURL + "/subscriptions")
+	subscriptionsGroup.Use(authMiddleware)
+	{
+		subscriptionsGroup.POST("", authMiddleware, userRoutes.UpdateProfile)
 	}
 
 	StartServerWithGracefulShutdown(ginApp, app.Config)

@@ -5,17 +5,16 @@ import (
 	"github.com/ahmadirfaan/match-nearby-app-rest/models/web"
 	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
 	"github.com/ahmadirfaan/match-nearby-app-rest/utils"
-	"github.com/sirupsen/logrus"
 )
-
-type userAuthentication struct {
-	userRepository    repositories.UsersRepository
-	profileRepository repositories.ProfilesRepository
-}
 
 type UserAuthenticationUseCase interface {
 	Register(request web.SignUpRequest) error
 	SignIn(request web.SignInRequest) (*web.SignInResponse, error)
+}
+
+type userAuthentication struct {
+	userRepository    repositories.UsersRepository
+	profileRepository repositories.ProfilesRepository
 }
 
 func NewUserAuthenticationUsecase(ur repositories.UsersRepository, pr repositories.ProfilesRepository) UserAuthenticationUseCase {
@@ -28,7 +27,6 @@ func NewUserAuthenticationUsecase(ur repositories.UsersRepository, pr repositori
 func (userAuth *userAuthentication) Register(request web.SignUpRequest) error {
 	err := utils.NewValidator().Struct(&request)
 	if err != nil {
-		logrus.Info("error validators: " + err.Error())
 		return utils.ErrorValidator
 	}
 

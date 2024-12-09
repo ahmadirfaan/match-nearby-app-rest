@@ -25,10 +25,12 @@ func (ar userRoutes) UpdateProfile(c *gin.Context) {
 	var request web.UpdateProfileRequest
 	if err := c.ShouldBindBodyWithJSON(&request); err != nil {
 		c.Error(utils.ErrorBadRequest)
+		return
 	}
 
 	if err := ar.UserUsecase.UpdateProfile(request); err != nil {
 		c.Error(err)
+		return
 	}
 
 	c.JSON(200, gin.H{

@@ -86,7 +86,7 @@ func (userAuth *userAuthentication) SignIn(request web.SignInRequest) (*web.Sign
 
 	return &web.SignInResponse{
 		TokenType:   "Bearer",
-		AccessToken: *token,
+		AccessToken: token,
 		ExpiredAt:   *expire,
 	}, nil
 }

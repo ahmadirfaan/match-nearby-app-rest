@@ -9,7 +9,7 @@ type SignInRequest struct {
 type SignInResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
-	ExpiredAt   uint64 `json:"expired_at"`
+	ExpiredAt   int64  `json:"expired_at"`
 }
 
 type ProfileResponse struct {

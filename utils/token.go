@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/ahmadirfaan/match-nearby-app-rest/config"
@@ -14,26 +14,31 @@ type ConfigToken struct {
 	TokenTTL  int
 }
 
-func GenerateToken(user database.Users) (*string, *uint64, error) {
+func GenerateToken(user database.Users) (string, *int64, error) {
 
 	configApp := config.Init()
 	jwtSecretKey := configApp.JWTSecret
 	configExpired := configApp.TokenTTL
 
-	expiredTime := time.Unix(time.Now().UTC().Add(time.Duration(configExpired)*time.Second).Unix(), 0)
+	expiredTime := time.Now().UTC().Add(time.Duration(configExpired) * time.Second).Unix()
 
-	// Generates Access Token Token
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["sub"] = 1
-	claims["userId"] = user.ID
-	claims["exp"] = expiredTime
-	logrus.Infof("jwt secret key from utils: %v", jwtSecretKey)
-	t, err := token.SignedString([]byte(jwtSecretKey))
-	if err != nil {
-		return nil, nil, err
+	claims := jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     expiredTime,
+		"iat":     time.Now().Unix(),
+		"sub":     "auth",
 	}
 
-	timePointer := uint64(expiredTime.UnixMilli() / 1000)
-	return &t, &timePointer, err
+	log.Info("jwtSecretKey: " + jwtSecretKey)
+
+	// Create a new token object with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with the secret key
+	t, err := token.SignedString([]byte(jwtSecretKey))
+	log.Info("token generated: " + t)
+	if err != nil {
+		return "", nil, err
+	}
+	return t, &expiredTime, err
 }

@@ -33,6 +33,8 @@ func AuthMiddlewareJWT() gin.HandlerFunc {
 
 		// Parse and validate the token
 		tokenString := parts[1]
+		logrus.Infof("token: %v", tokenString)
+
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			// Validate the signing method
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -46,9 +48,6 @@ func AuthMiddlewareJWT() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			logrus.Infof("token: %v", token)
-			logrus.Infof("tokenNotValid: %v", !token.Valid)
-			logrus.Errorf("error token not valid")
 			c.Error(utils.ErrorAuth)
 			c.Abort()
 			return

@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/ahmadirfaan/match-nearby-app-rest/config/storage"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/ahmadirfaan/match-nearby-app-rest/app"
 	"github.com/ahmadirfaan/match-nearby-app-rest/config"
-	databaseconnection "github.com/ahmadirfaan/match-nearby-app-rest/config/database"
 	"github.com/ahmadirfaan/match-nearby-app-rest/middleware"
 	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
 	"github.com/ahmadirfaan/match-nearby-app-rest/routes"
@@ -34,7 +34,7 @@ func NewCli(args []string) *Cli {
 func (cli *Cli) Run(app *app.Application) {
 
 	//setup the connection
-	db := databaseconnection.InitDb()
+	db := storage.InitDb()
 
 	//create repository
 	userRepository := repositories.NewUserRepository(db)

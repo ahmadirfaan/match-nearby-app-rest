@@ -1,4 +1,4 @@
-package databaseconnection
+package storage
 
 import (
 	"fmt"
@@ -15,15 +15,15 @@ import (
 )
 
 func InitDb() *gorm.DB {
-	app := app.Init()
-	maxIdleConn := app.Config.DBMaxIdleConnections
-	maxConn := app.Config.DBMaxConnections
-	maxLifetimeConn := app.Config.DBMaxLifetimeConnections
-	databaseUsername := app.Config.DBUsername
-	dbPassword := app.Config.DBPassword
-	databaseHost := app.Config.DBHost
-	databasePort := app.Config.DBPort
-	databaseName := app.Config.DBName
+	appConfig := app.Init()
+	maxIdleConn := appConfig.Config.DBMaxIdleConnections
+	maxConn := appConfig.Config.DBMaxConnections
+	maxLifetimeConn := appConfig.Config.DBMaxLifetimeConnections
+	databaseUsername := appConfig.Config.DBUsername
+	dbPassword := appConfig.Config.DBPassword
+	databaseHost := appConfig.Config.DBHost
+	databasePort := appConfig.Config.DBPort
+	databaseName := appConfig.Config.DBName
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", databaseHost, databaseUsername, dbPassword, databaseName, databasePort)
 	log.Info("dsn format : " + dsn)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{

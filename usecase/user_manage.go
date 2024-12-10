@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"github.com/ahmadirfaan/match-nearby-app-rest/models/database"
 	"github.com/ahmadirfaan/match-nearby-app-rest/models/web"
 	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
@@ -54,7 +55,12 @@ func (um *userManageUsecase) UpdateProfile(userID string, request web.UpdateProf
 		profile.Gender = request.Gender
 	}
 
-	return um.userRepository.SaveUser(user)
+	err := um.profileRepository.SaveProfile(profile)
+	if err != nil {
+		return err
+	}
+	um.userRepository.DeleteUserFromCache(userID, context.Background())
+	return err
 }
 
 func (um *userManageUsecase) UpdatePremium(userID string) error {

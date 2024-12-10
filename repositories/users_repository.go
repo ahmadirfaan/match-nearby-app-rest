@@ -20,6 +20,7 @@ type UsersRepository interface {
 	GetByUsername(username string) *database.Users
 	GetByEmail(email string) *database.Users
 	GetByUserId(id string) *database.Users
+	DeleteUserFromCache(id string, contextBackground context.Context)
 }
 
 type usersRepository struct {
@@ -48,7 +49,7 @@ func (usersRepository *usersRepository) SaveUser(user *database.Users) error {
 	}
 
 	if isUpdateCache {
-		saveToCache(user, context.Background())
+		saveUsersToCache(user, context.Background())
 	}
 
 	return nil
@@ -81,7 +82,7 @@ func (usersRepository *usersRepository) GetByUserId(id string) *database.Users {
 			logrus.Error("Failed to get user by id")
 			return nil
 		}
-		saveToCache(user, contextBackground)
+		saveUsersToCache(user, contextBackground)
 	} else {
 		err = json.Unmarshal([]byte(result), &user)
 		if err != nil {
@@ -94,7 +95,14 @@ func (usersRepository *usersRepository) GetByUserId(id string) *database.Users {
 	return user
 }
 
-func saveToCache(user *database.Users, contextBackground context.Context) {
+func (ur *usersRepository) DeleteUserFromCache(id string, contextBackground context.Context) {
+	err := redisClient.Del(contextBackground, fmt.Sprintf("USER_ID_%s", id)).Err()
+	if err != nil {
+		logrus.Fatalf("Failed delete from Redis: %v", id)
+	}
+}
+
+func saveUsersToCache(user *database.Users, contextBackground context.Context) {
 	userJSON, err := json.Marshal(user)
 	if err != nil {
 		logrus.Error("Failed to marshal user")

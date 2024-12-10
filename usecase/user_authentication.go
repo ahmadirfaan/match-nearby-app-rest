@@ -10,6 +10,7 @@ import (
 type UserAuthenticationUseCase interface {
 	Register(request web.SignUpRequest) error
 	SignIn(request web.SignInRequest) (*web.SignInResponse, error)
+	CheckUserExist(userID string) bool
 }
 
 type userAuthentication struct {
@@ -88,4 +89,12 @@ func (userAuth *userAuthentication) SignIn(request web.SignInRequest) (*web.Sign
 		AccessToken: token,
 		ExpiredAt:   *expire,
 	}, nil
+}
+
+func (userAuth *userAuthentication) CheckUserExist(userID string) bool {
+	if userID == "" {
+		return false
+	}
+	user := userAuth.userRepository.GetByUserId(userID)
+	return user != nil
 }

@@ -54,7 +54,7 @@ func (cli *Cli) Run(app *app.Application) {
 	configMiddleware(ginApp)
 
 	prefixApiURL := "/api/v1"
-	authMiddleware := middleware.AuthMiddlewareJWT()
+	authMiddleware := middleware.AuthMiddlewareJWT(userAuthenticationUsecase)
 
 	//create group auth
 	authGroup := ginApp.Group(prefixApiURL + "/auth")

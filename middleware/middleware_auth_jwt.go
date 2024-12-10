@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/ahmadirfaan/match-nearby-app-rest/usecase"
 	"github.com/golang-jwt/jwt"
 	"github.com/sirupsen/logrus"
 	"strings"
@@ -10,7 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddlewareJWT() gin.HandlerFunc {
+var user_id_key = "userID"
+var user_id_key_claim = "user_id"
+
+func AuthMiddlewareJWT(userUseCase usecase.UserAuthenticationUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Extract the token from the Authorization header
@@ -55,7 +59,13 @@ func AuthMiddlewareJWT() gin.HandlerFunc {
 
 		// Token is valid, extract claims if needed
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			c.Set("userID", claims["user_id"])
+			c.Set(user_id_key, claims[user_id_key_claim])
+		}
+
+		if isUserExist := userUseCase.CheckUserExist(c.GetString(user_id_key)); isUserExist == false {
+			c.Error(utils.ErrorAuth)
+			c.Abort()
+			return
 		}
 
 		c.Next() // Proceed to the next handler

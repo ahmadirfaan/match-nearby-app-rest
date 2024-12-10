@@ -9,6 +9,7 @@ import (
 
 type UserRoutes interface {
 	UpdateProfile(c *gin.Context)
+	UpdatePremium(c *gin.Context)
 }
 
 type userRoutes struct {
@@ -35,5 +36,17 @@ func (ar userRoutes) UpdateProfile(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Success Update Profile",
+	})
+}
+
+func (ar userRoutes) UpdatePremium(c *gin.Context) {
+
+	if err := ar.UserUsecase.UpdatePremium(c.GetString("userID")); err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Success Update Premium",
 	})
 }

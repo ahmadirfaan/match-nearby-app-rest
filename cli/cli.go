@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ahmadirfaan/match-nearby-app-rest/config/storage"
 	"net/http"
@@ -39,12 +40,13 @@ func (cli *Cli) Run(app *app.Application) {
 	//create repository
 	userRepository := repositories.NewUserRepository(db)
 	profileRepository := repositories.NewProfileRepository(db)
+	subscriptionRepository := repositories.NewSubscriptionsRepository(db)
 
 	usecase.NewUserAuthenticationUsecase(userRepository, profileRepository)
 
 	//create each use case
 	userAuthenticationUsecase := usecase.NewUserAuthenticationUsecase(userRepository, profileRepository)
-	userManageUsecase := usecase.NewUserManageUsecase(userRepository, profileRepository)
+	userManageUsecase := usecase.NewUserManageUsecase(userRepository, profileRepository, subscriptionRepository)
 
 	//create routes
 	authRoutes := routes.NewAuthRoutes(userAuthenticationUsecase)
@@ -77,7 +79,7 @@ func (cli *Cli) Run(app *app.Application) {
 	subscriptionsGroup := ginApp.Group(prefixApiURL + "/subscriptions")
 	subscriptionsGroup.Use(authMiddleware)
 	{
-		subscriptionsGroup.POST("", authMiddleware, userRoutes.UpdateProfile)
+		subscriptionsGroup.POST("", authMiddleware, userRoutes.UpdatePremium)
 	}
 
 	StartServerWithGracefulShutdown(ginApp, app.Config)
@@ -98,7 +100,7 @@ func StartServerWithGracefulShutdown(ginEngine *gin.Engine, serverconfig *config
 
 	// Run the server in a goroutine
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()

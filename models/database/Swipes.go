@@ -3,8 +3,8 @@ package database
 import "time"
 
 type Swipes struct {
-	CreatedAt time.Time `gorm:"autoCreateTime;column=created_at" json:"-"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime;column=updated_at" json:"-"`
+	CreatedAt time.Time `gorm:"autoCreateTime;column=created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime;column=updated_at"`
 	ID        string    `gorm:"type:char(26);primaryKey"`
 	SwiperID  string    `gorm:"type:char(26);not null;column=swiper_id"`
 	SwipedID  string    `gorm:"type:char(26);not null;column=swiped_id"`

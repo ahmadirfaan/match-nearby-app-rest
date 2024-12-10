@@ -46,11 +46,8 @@ func (userAuth *userAuthentication) Register(request web.SignUpRequest) error {
 		Gender: request.Gender,
 		Name:   request.Name,
 	}
-	if err := userAuth.profileRepository.SaveProfile(profile); err != nil {
-		return err
-	}
 
-	return nil
+	return userAuth.profileRepository.SaveProfile(profile)
 }
 
 func (userAuth *userAuthentication) SignIn(request web.SignInRequest) (*web.SignInResponse, error) {

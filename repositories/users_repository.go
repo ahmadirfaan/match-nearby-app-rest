@@ -34,8 +34,10 @@ func NewUserRepository(db *gorm.DB) UsersRepository {
 
 func (usersRepository *usersRepository) SaveUser(user *database.Users) error {
 
+	isUpdateCache := true
 	if user.ID == "" {
 		user.ID = ulid.Make().String()
+		isUpdateCache = false
 	}
 
 	if err := usersRepository.DB.Save(&user).Error; err != nil {
@@ -45,7 +47,10 @@ func (usersRepository *usersRepository) SaveUser(user *database.Users) error {
 		return err
 	}
 
-	saveToCache(user.ID, user, context.Background())
+	if isUpdateCache {
+		saveToCache(user, context.Background())
+	}
+
 	return nil
 }
 
@@ -54,7 +59,6 @@ func (usersRepository *usersRepository) GetByUsername(username string) *database
 	if err := usersRepository.DB.Where("username = ?", username).First(&user).Error; err != nil {
 		return nil
 	}
-	saveToCache(user.ID, user, context.Background())
 	return user
 
 }
@@ -64,7 +68,6 @@ func (usersRepository *usersRepository) GetByEmail(email string) *database.Users
 	if err := usersRepository.DB.Where("email = ?", email).First(&user).Error; err != nil {
 		return nil
 	}
-	saveToCache(user.ID, user, context.Background())
 	return user
 }
 
@@ -78,7 +81,7 @@ func (usersRepository *usersRepository) GetByUserId(id string) *database.Users {
 			logrus.Error("Failed to get user by id")
 			return nil
 		}
-		saveToCache(id, user, contextBackground)
+		saveToCache(user, contextBackground)
 	} else {
 		err = json.Unmarshal([]byte(result), &user)
 		if err != nil {
@@ -91,14 +94,14 @@ func (usersRepository *usersRepository) GetByUserId(id string) *database.Users {
 	return user
 }
 
-func saveToCache(id string, user *database.Users, contextBackground context.Context) {
+func saveToCache(user *database.Users, contextBackground context.Context) {
 	userJSON, err := json.Marshal(user)
 	if err != nil {
 		logrus.Error("Failed to marshal user")
 	}
-	err = redisClient.Set(contextBackground, fmt.Sprintf("USER_ID_%s", id), userJSON, 0).Err()
+	err = redisClient.Set(contextBackground, fmt.Sprintf("USER_ID_%s", user.ID), userJSON, 0).Err()
 	if err != nil {
-		logrus.Fatalf("Failed  save to Redis: %v", id)
+		logrus.Fatalf("Failed  save to Redis: %v", user.ID)
 	}
-	logrus.Infof("SAVE USER_ID ON REDIS: %s", id)
+	logrus.Infof("SAVE USER_ID ON REDIS: %s", user.ID)
 }

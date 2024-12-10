@@ -3,8 +3,8 @@ package database
 import "time"
 
 type Profiles struct {
-	CreatedAt time.Time `gorm:"autoCreateTime;column=created_at" json:"-"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime;column=updated_at" json:"-"`
+	CreatedAt time.Time `gorm:"autoCreateTime;column=created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime;column=updated_at"`
 	ID        string    `gorm:"type:char(26);primaryKey;not null;column=id"`
 	UserID    string    `gorm:"type:char(26);unique;not null;column=user_id"` // Explicitly set to snake_case
 	Name      string    `gorm:"not null;column=name"`

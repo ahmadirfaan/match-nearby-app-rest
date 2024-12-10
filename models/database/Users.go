@@ -5,8 +5,8 @@ import (
 )
 
 type Users struct {
-	CreatedAt     time.Time       `gorm:"autoCreateTime;column=created_at" json:"-"`
-	UpdatedAt     time.Time       `json:"-" gorm:"column=updated_at"`
+	CreatedAt     time.Time       `gorm:"autoCreateTime;column=created_at"`
+	UpdatedAt     time.Time       `gorm:"autoUpdateTime;column=updated_at"`
 	ID            string          `gorm:"type:char(26);primaryKey;column=id"`
 	Username      string          `gorm:"unique;not null;column=username"`
 	Email         string          `gorm:"unique;not null;column=email"`

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/ahmadirfaan/match-nearby-app-rest/app"
 	"github.com/ahmadirfaan/match-nearby-app-rest/config/storage"
+	"github.com/ahmadirfaan/match-nearby-app-rest/models/database"
 	"github.com/ahmadirfaan/match-nearby-app-rest/models/web"
 	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
 	"github.com/ahmadirfaan/match-nearby-app-rest/utils"
@@ -34,7 +35,16 @@ func NewSwipeUseCase(ur repositories.UsersRepository, sr repositories.SwipeRepos
 
 func (u *swipeUsecase) SwipeProfiles(userID string, request web.SwipeRequest) error {
 
+	if err := utils.NewValidator().Struct(&request); err != nil {
+		return utils.ErrorValidator
+	}
+
 	user := u.userRepository.GetByUserId(userID)
+
+	//can't self swipe
+	if user.Profile.ID == request.UserID {
+		return utils.ErrorBadRequest
+	}
 
 	keySwipe := fmt.Sprintf("SWIPE_%s", userID)
 
@@ -52,14 +62,40 @@ func (u *swipeUsecase) SwipeProfiles(userID string, request web.SwipeRequest) er
 			return utils.ErrorBadRequest
 		}
 
-		if totalSwipe <= 0 {
-			redisClient.Set(ctxBackgroundRedis, keySwipe, "1", 24*time.Hour)
+		err := saveSwipe(userID, request, u)
+		if err != nil {
+			return err
 		}
 
-		redisClient.Incr(ctxBackgroundRedis, keySwipe)
+		if totalSwipe <= 0 {
+			redisClient.Set(ctxBackgroundRedis, keySwipe, "1", 24*time.Hour)
+		} else {
+			redisClient.Incr(ctxBackgroundRedis, keySwipe)
+		}
+
+		return nil
 
 	}
 
-	return nil
+	return saveSwipe(userID, request, u)
 
+}
+
+func saveSwipe(userID string, request web.SwipeRequest, u *swipeUsecase) error {
+	swipeDirection := "Pass"
+	if request.Action {
+		swipeDirection = "Like"
+	}
+
+	swipe := &database.Swipes{
+		SwiperID:  userID,
+		Direction: swipeDirection,
+		SwipedID:  request.UserID,
+		SwipedAt:  time.Now(),
+	}
+
+	if err := u.swipeRepository.SaveSwipe(swipe); err != nil {
+		return err
+	}
+	return nil
 }

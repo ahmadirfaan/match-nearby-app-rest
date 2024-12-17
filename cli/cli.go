@@ -47,10 +47,12 @@ func (cli *Cli) Run(app *app.Application) {
 	//create each use case
 	userAuthenticationUsecase := usecase.NewUserAuthenticationUsecase(userRepository, profileRepository)
 	userManageUsecase := usecase.NewUserManageUsecase(userRepository, profileRepository, subscriptionRepository)
+	swipeUsecase := usecase.NewSwipeUseCase(userRepository, profileRepository, subscriptionRepository)
 
 	//create routes
 	authRoutes := routes.NewAuthRoutes(userAuthenticationUsecase)
 	userRoutes := routes.NewUserRoutes(userManageUsecase)
+	swipeRoutes := routes.NewSwipeRoutes(swipeUsecase)
 
 	ginApp := gin.Default()
 	configMiddleware(ginApp)
@@ -73,7 +75,8 @@ func (cli *Cli) Run(app *app.Application) {
 	swipeGroup := ginApp.Group(prefixApiURL + "/swipes")
 	swipeGroup.Use(authMiddleware)
 	{
-		swipeGroup.POST("", authMiddleware, userRoutes.UpdateProfile)
+		swipeGroup.POST("", authMiddleware, swipeRoutes.SwipeAction)
+		swipeGroup.GET("/profiles", authMiddleware, swipeRoutes.GetNearbyProfile)
 	}
 
 	subscriptionsGroup := ginApp.Group(prefixApiURL + "/subscriptions")

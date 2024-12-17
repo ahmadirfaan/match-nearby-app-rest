@@ -28,6 +28,7 @@ type Config struct {
 	DBMaxConnections         int
 	DBMaxIdleConnections     int
 	DBMaxLifetimeConnections int
+	MaximalTotalSwipe        int
 }
 
 var cachedConfig *Config
@@ -77,6 +78,14 @@ func Init() *Config {
 		tokenTTL = 604800
 	}
 
+	maximalTotalSwipe, err := strconv.Atoi(os.Getenv("MAXIMAL_TOTAL_SWIPE"))
+	if err != nil {
+		log.Warnf("Invalid MAXIMAL_TOTAL_SWIPE: %v", err)
+		maximalTotalSwipe = 10
+	}
+
+	os.Getenv("MAXIMAL_TOTAL_SWIPE")
+
 	config := &Config{
 		AppPort:                  os.Getenv("APP_PORT"),
 		AppName:                  os.Getenv("APP_NAME"),
@@ -94,6 +103,7 @@ func Init() *Config {
 		DBMaxConnections:         dbMaxConnections,
 		DBMaxIdleConnections:     dbMaxIdleConnections,
 		DBMaxLifetimeConnections: dbMaxLifetimeConnections,
+		MaximalTotalSwipe:        maximalTotalSwipe,
 	}
 
 	configOnce.Do(func() {

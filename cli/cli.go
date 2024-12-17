@@ -41,13 +41,14 @@ func (cli *Cli) Run(app *app.Application) {
 	userRepository := repositories.NewUserRepository(db)
 	profileRepository := repositories.NewProfileRepository(db)
 	subscriptionRepository := repositories.NewSubscriptionsRepository(db)
+	swipeRepository := repositories.NewSwipeRepository(db)
 
 	usecase.NewUserAuthenticationUsecase(userRepository, profileRepository)
 
 	//create each use case
 	userAuthenticationUsecase := usecase.NewUserAuthenticationUsecase(userRepository, profileRepository)
 	userManageUsecase := usecase.NewUserManageUsecase(userRepository, profileRepository, subscriptionRepository)
-	swipeUsecase := usecase.NewSwipeUseCase(userRepository, profileRepository, subscriptionRepository)
+	swipeUsecase := usecase.NewSwipeUseCase(userRepository, swipeRepository)
 
 	//create routes
 	authRoutes := routes.NewAuthRoutes(userAuthenticationUsecase)

@@ -1,7 +1,9 @@
 package routes
 
 import (
+	"github.com/ahmadirfaan/match-nearby-app-rest/models/web"
 	"github.com/ahmadirfaan/match-nearby-app-rest/usecase"
+	"github.com/ahmadirfaan/match-nearby-app-rest/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,10 +22,25 @@ func NewSwipeRoutes(uc usecase.SwipeUsecase) SwipeRoutes {
 	}
 }
 
-func (sr swipeRoutes) SwipeAction(context *gin.Context) {
+func (sr swipeRoutes) SwipeAction(c *gin.Context) {
+	var request web.SwipeRequest
+	if err := c.ShouldBindBodyWithJSON(&request); err != nil {
+		c.Error(utils.ErrorBadRequest)
+		return
+	}
 
+	if err := sr.SwipeUsecase.SwipeProfiles(c.GetString("userID"), request); err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Success Swipe Action",
+	})
 }
 
-func (sr swipeRoutes) GetNearbyProfile(context *gin.Context) {
-
+func (sr swipeRoutes) GetNearbyProfile(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "Success Nearby Profile",
+	})
 }

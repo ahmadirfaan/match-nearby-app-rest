@@ -11,14 +11,22 @@ import (
 	"github.com/ahmadirfaan/match-nearby-app-rest/repositories"
 	"github.com/ahmadirfaan/match-nearby-app-rest/utils"
 	"github.com/redis/go-redis/v9"
+	"math"
 	"strconv"
 	"time"
 )
 
 var redisClient = storage.InitRedis()
 
+var keySwipe = func(userID string) string {
+	return fmt.Sprintf("SWIPE_%s", userID)
+}
+
+var maximalTotalSwipe = app.Init().Config.MaximalTotalSwipe
+
 type SwipeUsecase interface {
 	SwipeProfiles(userID string, request web.SwipeRequest) error
+	GetProfiles(s string) ([]web.ProfileModelResponse, *uint16, error)
 }
 
 type swipeUsecase struct {
@@ -31,6 +39,34 @@ func NewSwipeUseCase(ur repositories.UsersRepository, sr repositories.SwipeRepos
 		userRepository:  ur,
 		swipeRepository: sr,
 	}
+}
+
+func (u *swipeUsecase) GetProfiles(userID string) ([]web.ProfileModelResponse, *uint16, error) {
+
+	user := u.userRepository.GetByUserId(userID)
+
+	var remainingQuota uint16
+	if user.IsPremium {
+		remainingQuota = math.MaxUint16
+	} else {
+		totalSwipeQuotaRedis := redisClient.Get(context.Background(), keySwipe(userID))
+		if err := totalSwipeQuotaRedis.Err(); !errors.Is(err, redis.Nil) && err != nil {
+			return nil, nil, err
+		}
+
+		totalSwipeString, _ := totalSwipeQuotaRedis.Result()
+		totalSwipe, _ := strconv.Atoi(totalSwipeString)
+
+		if totalSwipe >= maximalTotalSwipe {
+			return nil, nil, utils.ErrorBadRequest
+		}
+		remainingQuota = uint16(maximalTotalSwipe - totalSwipe)
+	}
+
+	profiles := u.swipeRepository.GetSwipeNearby(userID)
+
+	return convertProfilesToProfileModels(profiles), &remainingQuota, nil
+
 }
 
 func (u *swipeUsecase) SwipeProfiles(userID string, request web.SwipeRequest) error {
@@ -46,11 +82,9 @@ func (u *swipeUsecase) SwipeProfiles(userID string, request web.SwipeRequest) er
 		return utils.ErrorBadRequest
 	}
 
-	keySwipe := fmt.Sprintf("SWIPE_%s", userID)
-
 	if !user.IsPremium {
 		ctxBackgroundRedis := context.Background()
-		totalSwipeRedis := redisClient.Get(ctxBackgroundRedis, keySwipe)
+		totalSwipeRedis := redisClient.Get(ctxBackgroundRedis, keySwipe(userID))
 		if err := totalSwipeRedis.Err(); !errors.Is(err, redis.Nil) && err != nil {
 			return err
 		}
@@ -58,7 +92,7 @@ func (u *swipeUsecase) SwipeProfiles(userID string, request web.SwipeRequest) er
 		totalSwipeString, _ := totalSwipeRedis.Result()
 		totalSwipe, _ := strconv.Atoi(totalSwipeString)
 
-		if totalSwipe >= app.Init().Config.MaximalTotalSwipe {
+		if totalSwipe >= maximalTotalSwipe {
 			return utils.ErrorBadRequest
 		}
 
@@ -68,9 +102,9 @@ func (u *swipeUsecase) SwipeProfiles(userID string, request web.SwipeRequest) er
 		}
 
 		if totalSwipe <= 0 {
-			redisClient.Set(ctxBackgroundRedis, keySwipe, "1", 24*time.Hour)
+			redisClient.Set(ctxBackgroundRedis, keySwipe(userID), "1", 24*time.Hour)
 		} else {
-			redisClient.Incr(ctxBackgroundRedis, keySwipe)
+			redisClient.Incr(ctxBackgroundRedis, keySwipe(userID))
 		}
 
 		return nil
@@ -82,6 +116,13 @@ func (u *swipeUsecase) SwipeProfiles(userID string, request web.SwipeRequest) er
 }
 
 func saveSwipe(userID string, request web.SwipeRequest, u *swipeUsecase) error {
+
+	//check swipe action between one day
+	swipeData := u.swipeRepository.GetSwipeStatus(userID, request.UserID)
+	if len(swipeData) > 0 {
+		return utils.ErrorBadRequest
+	}
+
 	swipeDirection := "Pass"
 	if request.Action {
 		swipeDirection = "Like"
@@ -98,4 +139,20 @@ func saveSwipe(userID string, request web.SwipeRequest, u *swipeUsecase) error {
 		return err
 	}
 	return nil
+}
+
+func convertProfilesToProfileModels(profiles []database.Profiles) []web.ProfileModelResponse {
+	var profileModels []web.ProfileModelResponse
+
+	for _, p := range profiles {
+		profileModels = append(profileModels, web.ProfileModelResponse{
+			UserId: p.UserID,
+			Name:   p.Name,
+			Gender: p.Gender,
+			Photo:  p.PhotoURL,
+			Bio:    p.Bio,
+		})
+	}
+
+	return profileModels
 }

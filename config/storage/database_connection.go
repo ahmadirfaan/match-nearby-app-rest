@@ -26,8 +26,19 @@ func InitDb() *gorm.DB {
 	databaseName := appConfig.Config.DBName
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", databaseHost, databaseUsername, dbPassword, databaseName, databasePort)
 	log.Info("dsn format : " + dsn)
+	newLogger := logger.New(
+		log.New(), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level
+			IgnoreRecordNotFoundError: false,       // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      false,       // Don't include params in the SQL log
+			Colorful:                  false,
+			// Disable color
+		},
+	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger:                 logger.Default,
+		Logger:                 newLogger,
 		SkipDefaultTransaction: true,
 		NamingStrategy: &schema.NamingStrategy{
 			TablePrefix:   "",

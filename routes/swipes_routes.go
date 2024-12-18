@@ -40,7 +40,16 @@ func (sr swipeRoutes) SwipeAction(c *gin.Context) {
 }
 
 func (sr swipeRoutes) GetNearbyProfile(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "Success Nearby Profile",
+
+	data, remainingQuota, err := sr.SwipeUsecase.GetProfiles(c.GetString("userID"))
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(200, &web.GetProfileResponse{
+		Data:           data,
+		RemainingQuota: *remainingQuota,
 	})
 }
